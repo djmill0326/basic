@@ -1,3 +1,144 @@
+use std::{any::Any, fmt::Display};
+
+#[derive(Copy, Clone, Debug)]
+struct Root(isize);
+
+impl Display for Root {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&format!("{}", self.0))
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+struct File<'a> {
+    name: &'a str,
+    ptr: Root
+}
+
+#[derive(Copy, Clone, Debug)]
+struct Io<'a, 'b> {
+    send: File<'a>,
+    recv: File<'b>
+}
+
+#[derive(Copy, Clone, Debug)]
+struct Device<'a> {
+    io: Io<'a, 'a>
+}
+
+#[derive(Copy, Clone, Debug)]
+struct Logger<'a> {
+    stdout: File<'a>,
+    stdin: File<'a>,
+    stderr: File<'a>
+}
+
+#[derive(Clone, Debug)]
+struct Storage {
+    device: Device<'static>,
+    data: Vec<usize>
+}
+
+#[derive(Clone, Debug)]
+struct System {
+    root_device: Device<'static>,
+    storage: Storage,
+    console: Logger<'static>
+}
+
+trait Bootstrap: Sized {
+    fn bootstrap() -> Self;
+}
+
+impl<'a> File<'a> {
+    fn res(name: &'a str, data: isize) -> Self {
+        File { name: name, ptr: Root(data) }
+    }
+
+    fn stdout() -> Self {
+        File::res("stdout", 0)
+    }
+
+    fn stdin() -> Self {
+        File::res("stdin", 0)
+    }
+
+    fn stderr() -> Self {
+        File::res("stderr", 0)
+    }
+}
+
+impl<'a, 'b> Bootstrap for Io<'a, 'b> {
+    fn bootstrap() -> Self {
+        Self {
+            send: File::stdout(),
+            recv: File::stdin()
+        }
+    }
+}
+
+impl<'a> Bootstrap for Device<'a> {
+    fn bootstrap() -> Self {
+        Self { io: Io::bootstrap() }
+    }
+}
+
+impl<'a> Device<'a> {
+    fn storage() -> Storage {
+        Storage {
+            device: Device::bootstrap(),
+            data: Vec::new()
+        }
+    }
+}
+
+impl<'a> Bootstrap for Logger<'a> {
+    fn bootstrap() -> Self {
+        Self {
+            stdout: File::stdout(),
+            stdin: File::stdin(),
+            stderr: File::stderr()
+        }
+    }
+}
+
+impl<'a> Logger<'a> {
+    fn log(&self, x: File) {
+        println!("[{}:{}/info] {:?}", self.stdout.name, self.stdout.ptr, x)
+    }
+
+    fn warn(&self, x: File) {
+        println!("[{}:{}/warn] {:?}", self.stdout.name, self.stdout.ptr, x)
+    }
+
+    fn err(&self, x: File) {
+        eprintln!("[{}:{}/error] {:?}", self.stderr.name, self.stderr.ptr, x)
+    }
+}
+
+impl Bootstrap for Storage {
+    fn bootstrap() -> Self {
+        Device::storage()
+    }
+}
+
+impl Bootstrap for System {
+    fn bootstrap() -> Self {
+        Self {
+            root_device: Device::bootstrap(),
+            storage: Storage::bootstrap(),
+            console: Logger::bootstrap()
+        }
+    }
+}
+
+impl System {
+    fn new() -> Self {
+        Self::bootstrap()
+    }
+}
+
 fn main() {
-    println!("Hello, world!");
+    let sys = System::new();
+    sys.console.log(File::res("Hello, world!", 0xDEADBEEF));
 }
