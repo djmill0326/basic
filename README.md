@@ -1,5 +1,5 @@
-# Basic (rust)
-## Incredibly simple runtime
+# basic (rust)
+## incredibly simple runtime
 - cuts through the bullshit
 - zero-cost
 - might be negative-cost
