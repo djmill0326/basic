@@ -7,3 +7,5 @@
 > git clone https://github.com/djmill0326/basic
 #### run
 > cargo run
+##### need cargo?
+> curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
