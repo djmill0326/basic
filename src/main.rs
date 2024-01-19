@@ -107,15 +107,15 @@ impl<'a> Bootstrap for Logger<'a> {
 
 impl<'a> Logger<'a> {
     fn log(&self, x: &str) {
-        println!("[{}:{}/info] {:?}", self.stdout.name, self.stdout.ptr, x)
+        println!("[{}:{}/info] {}", self.stdout.name, self.stdout.ptr, x)
     }
 
     fn warn(&self, x: &str) {
-        println!("[{}:{}/warn] {:?}", self.stdout.name, self.stdout.ptr, x)
+        println!("[{}:{}/warn] {}", self.stdout.name, self.stdout.ptr, x)
     }
 
     fn err(&self, x: &str) {
-        eprintln!("[{}:{}/error] {:?}", self.stderr.name, self.stderr.ptr, x)
+        eprintln!("[{}:{}/error] {}", self.stderr.name, self.stderr.ptr, x)
     }
 }
 
