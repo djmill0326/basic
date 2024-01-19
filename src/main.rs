@@ -1,4 +1,7 @@
-use std::{any::Any, fmt::Display};
+mod memory;
+
+use memory::{Memory,Heap};
+use std::fmt::Display;
 
 #[derive(Copy, Clone, Debug)]
 struct Root(isize);
@@ -36,7 +39,7 @@ struct Logger<'a> {
 #[derive(Clone, Debug)]
 struct Storage {
     device: Device<'static>,
-    data: Vec<usize>
+    data: Memory
 }
 
 #[derive(Clone, Debug)]
@@ -87,7 +90,7 @@ impl<'a> Device<'a> {
     fn storage() -> Storage {
         Storage {
             device: Device::bootstrap(),
-            data: Vec::new()
+            data: Memory::Heap(Heap::new())
         }
     }
 }
@@ -103,15 +106,15 @@ impl<'a> Bootstrap for Logger<'a> {
 }
 
 impl<'a> Logger<'a> {
-    fn log(&self, x: File) {
+    fn log(&self, x: &str) {
         println!("[{}:{}/info] {:?}", self.stdout.name, self.stdout.ptr, x)
     }
 
-    fn warn(&self, x: File) {
+    fn warn(&self, x: &str) {
         println!("[{}:{}/warn] {:?}", self.stdout.name, self.stdout.ptr, x)
     }
 
-    fn err(&self, x: File) {
+    fn err(&self, x: &str) {
         eprintln!("[{}:{}/error] {:?}", self.stderr.name, self.stderr.ptr, x)
     }
 }
@@ -139,6 +142,7 @@ impl System {
 }
 
 fn main() {
+    memory::init().expect("failed to initialize memory subsystem");
     let sys = System::new();
-    sys.console.log(File::res("Hello, world!", 0xDEADBEEF));
+    sys.console.log("Hello, world!");
 }
