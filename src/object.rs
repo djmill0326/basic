@@ -1,5 +1,23 @@
 use crate::{memory::Dynamic, util::{Output, Generic}};
 
+fn proto_call(x: Option<&Object>) -> Generic {
+    println!(";) [proto_call] {:?}", x);
+    Ok(x)
+}
+
+static mut OBJ_ROOT: Option<Object> = None;
+
+fn _obj_root() -> &'static Object {
+    unsafe { OBJ_ROOT.as_ref().expect("failed to get root object prototype") }
+}
+
+pub fn prototype() -> Object {
+    let mut obj = Object(Dynamic::new());
+    obj.set_object(0, _obj_root()).unwrap();
+    obj.set_fn(1, proto_call).unwrap();
+    obj
+}
+
 #[derive(Clone, Debug)]
 pub struct Object(Dynamic);
 
@@ -11,10 +29,13 @@ fn call_table() -> &'static mut Vec<fn (Option<&Object>) -> Generic> {
 
 impl Object {
     pub fn new() -> Object {
-        Object(Dynamic::new())
+        let mut obj = Object(Dynamic::new());
+        obj.set_object(0, &prototype()).unwrap();
+        obj.set_fn(1, proto_call).unwrap();
+        obj
     }
 
-    pub fn get_u32(&self, index: usize) -> Output<u32> {
+    pub fn get_usize(&self, index: usize) -> Output<usize> {
         if index < 4 {
             Ok(unsafe { *self.0.0.get_unchecked(index) })
         } else {
@@ -22,18 +43,17 @@ impl Object {
         }
     }
 
-    pub fn set_u32(&mut self, index: usize, x: u32) -> Output<()> {
+    pub fn set_usize(&mut self, index: usize, x: usize) -> Output<()> {
         if index < 4 {
             unsafe { 
-                let addr = self.0.0.get_unchecked_mut(index);
-                *addr = x;
+                *self.0.0.get_unchecked_mut(index) = x;
                 Ok(())
             }
         } else {
-            if index < self.0.1.len() {
+            if index - 4 < self.0.1.len() {
                 self.0.1[index - 4] = x;
                 Ok(())
-            } else if index == self.0.1.len() {
+            } else if index - 4 == self.0.1.len() {
                 self.0.1.push(x);
                 Ok(())
             } else {
@@ -43,44 +63,40 @@ impl Object {
     }
 
     pub fn get_object<'a>(&self, index: usize) -> Output<&'a Object> {
-        let x = self.get_u32(index)? as usize;
+        let x = self.get_usize(index)?;
         unsafe { Ok(std::mem::transmute::<usize, &Object>(x)) }
     }
 
     pub fn set_object<'a>(&mut self, index: usize, x: &Object) -> Output<()> {
-        let inner = unsafe { std::mem::transmute::<&Object, usize>(x) } as u32;
-        self.set_u32(index, inner)
+        let inner = unsafe { std::mem::transmute::<&Object, usize>(x) };
+        self.set_usize(index, inner)
     }
 
     pub fn get_fn(&self, index: usize) -> Output<fn (Option<&Object>) -> Generic> {
-        let index = self.get_u32(index).expect("failed to get object property for function call") as usize;
+        let index = self.get_usize(index).expect("failed to get object property for function call");
         call_table()
-            .get(self.get_u32(index)? as usize)
+            .get(self.get_usize(index)?)
             .map_or(Err("failed to get object property as function"), |x| Ok(*x))
     }
 
     pub fn set_fn<'a>(&mut self, index: usize, x: fn (Option<&Object>) -> Generic) -> Output<()> {
         call_table().push(x);
-        self.set_u32(index, (call_table().len() - 1) as u32)
+        self.set_usize(index, (call_table().len() - 1))
     }
 
     pub fn call<'a>(&self, x: Option<&'a Object>) -> Generic<'a> {
-        self.get_fn(0).expect("failed to get object as lambda")(x)
+        self.get_fn(1).expect("failed to get object as lambda")(x)
+    }
+
+    pub fn prototype(&self) -> &Object {
+        self.get_object(0).expect("this should not be possible.")
+    }
+
+    pub fn str(&self) -> String {
+        format!("{:?}", self)
     }
 }
 
-macro_rules! closure {
-    ($x: expr) => {
-        unsafe {{
-            let func: &dyn Fn(Option<&crate::object::Object>) -> crate::util::Generic = &$x;
-            let x: (fn (Option<&crate::object::Object>) -> crate::util::Generic, u64) = std::mem::transmute(func);
-            x.0
-        }}
-    }
-}
-
-macro_rules! out {
-    ($x: expr) => {
-        Ok::<Option<&crate::object::Object>, &str>($x)
-    }
+pub(crate) fn init() {
+    unsafe { OBJ_ROOT = Some(Object(Dynamic::new())) }
 }

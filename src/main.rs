@@ -153,11 +153,11 @@ fn func<'a>(x: Option<&'a Object>) -> Generic {
 }
 
 fn main() {
+    object::init();
     memory::init().expect("failed to initialize memory subsystem");
     let sys = System::new();
     sys.console.log("Hello, world!");
 
-    let mut obj = object::Object::new();
-    obj.set_fn(0, func).unwrap();
-    obj.call(None).expect("failure :(");
+    let obj = object::Object::new();
+    obj.call(Some(&object::prototype())).expect("failure :(");
 }

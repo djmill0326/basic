@@ -5,16 +5,16 @@ const PAGE_SIZE: usize = 2048;
 const STACK_SIZE: usize = PAGE_SIZE * 8;
 
 #[derive(Clone, Copy, Debug)]
-pub struct Page(pub [u32; PAGE_SIZE]);
+pub struct Page(pub [usize; PAGE_SIZE]);
 
 #[derive(Clone, Copy, Debug)]
-pub struct Stack(pub [u32; STACK_SIZE]);
+pub struct Stack(pub [usize; STACK_SIZE]);
 
 #[derive(Clone, Debug)]
 pub struct Heap(pub Vec<Page>);
 
 #[derive(Clone, Debug)]
-pub struct Dynamic(pub [u32;4], pub Vec<u32>);
+pub struct Dynamic(pub [usize;4], pub Vec<usize>);
 
 #[derive(Clone, Debug)]
 pub enum Memory {
