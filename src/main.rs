@@ -1,5 +1,8 @@
+mod typeshit;
 mod memory;
 mod object;
+mod string;
+mod list;
 mod util;
 mod render;
 
@@ -146,17 +149,13 @@ impl System {
     }
 }
 
-fn func<'a>(x: Option<&'a Object>) -> Generic {
-    println!("cool thing - {:?}", x);
-    Ok(None)
-}
-
 fn main() {
     object::init();
     memory::init().expect("failed to initialize memory subsystem");
+
     let sys = System::new();
     sys.console.log("Hello, world!");
 
     let obj = object::Object::new();
-    obj.call(Some(&object::prototype())).expect("failure :(");
+    obj.call(Some(&obj)).expect("failure :(");
 }

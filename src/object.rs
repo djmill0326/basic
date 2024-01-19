@@ -8,7 +8,7 @@ fn proto_call(x: Option<&Object>) -> Generic {
 static mut OBJ_ROOT: Option<Object> = None;
 
 fn _obj_root() -> &'static Object {
-    unsafe { OBJ_ROOT.as_ref().expect("failed to get root object prototype") }
+    unsafe { OBJ_ROOT.as_ref().unwrap_unchecked() }
 }
 
 pub fn prototype() -> Object {
@@ -19,7 +19,7 @@ pub fn prototype() -> Object {
 }
 
 #[derive(Clone, Debug)]
-pub struct Object(Dynamic);
+pub struct Object(pub Dynamic);
 
 static mut CALL_TABLE: Vec<fn (Option<&Object>) -> Generic> = Vec::new();
 
@@ -30,8 +30,16 @@ fn call_table() -> &'static mut Vec<fn (Option<&Object>) -> Generic> {
 impl Object {
     pub fn new() -> Object {
         let mut obj = Object(Dynamic::new());
-        obj.set_object(0, &prototype()).unwrap();
-        obj.set_fn(1, proto_call).unwrap();
+        unsafe {
+            obj.set_object(0, &prototype()).unwrap_unchecked();
+            obj.set_fn(1, proto_call).unwrap_unchecked();
+        }
+        obj
+    }
+
+    pub fn from(x: &Object) -> Object {
+        let mut obj = Object::new();
+        obj.set_object(0, x);
         obj
     }
 
@@ -85,11 +93,11 @@ impl Object {
     }
 
     pub fn call<'a>(&self, x: Option<&'a Object>) -> Generic<'a> {
-        self.get_fn(1).expect("failed to get object as lambda")(x)
+        unsafe { self.get_fn(1).unwrap_unchecked()(x) }
     }
 
     pub fn prototype(&self) -> &Object {
-        self.get_object(0).expect("this should not be possible.")
+        unsafe { self.get_object(0).unwrap_unchecked() }
     }
 
     pub fn str(&self) -> String {
