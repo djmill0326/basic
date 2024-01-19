@@ -1,4 +1,7 @@
-﻿const PAGE_SIZE: usize = 2048;
+﻿
+use crate::object::Object;
+
+const PAGE_SIZE: usize = 2048;
 const STACK_SIZE: usize = PAGE_SIZE * 8;
 
 #[derive(Clone, Copy, Debug)]
@@ -11,31 +14,40 @@ pub struct Stack(pub [u32; STACK_SIZE]);
 pub struct Heap(pub Vec<Page>);
 
 #[derive(Clone, Debug)]
+pub struct Dynamic(pub [u32;4], pub Vec<u32>);
+
+#[derive(Clone, Debug)]
 pub enum Memory {
-    Page(Page), Stack(Stack), Heap(Heap)
+    Page(Page), Stack(Stack), Heap(Heap), Dynamic(Dynamic)
 }
 
 impl Page {
-    pub fn new() -> Page { Page([0; PAGE_SIZE]) }
+    pub fn new() -> Self { Page([0; PAGE_SIZE]) }
 }
 
 impl Stack {
-    pub fn new() -> Stack { Stack([0; STACK_SIZE]) }
+    pub fn new() -> Self { Stack([0; STACK_SIZE]) }
 }
 
 impl Heap {
-    pub fn new() -> Heap { Heap(Vec::new()) }
+    pub fn new() -> Self { Heap(Vec::new()) }
+}
+
+impl Dynamic {
+    pub fn new() -> Self { Dynamic([0;4], Vec::new()) }
 }
 
 static mut ROOT_PAGE: Option<Page> = None;
 static mut ROOT_STACK: Option<Stack> = None;
 static mut ROOT_HEAP: Option<Heap> = None;
+static mut ROOT_OBJECT: Option<Object> = None;
 
 pub fn init() -> Result<(), &'static str> {
     unsafe {
         ROOT_PAGE = Some(Page::new());
         ROOT_STACK = Some(Stack::new());
         ROOT_HEAP = Some(Heap::new());
+        ROOT_OBJECT = Some(Object::new());
     }
     Ok(())
 }

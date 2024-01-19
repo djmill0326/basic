@@ -1,6 +1,12 @@
 mod memory;
+#[macro_use]
+mod object;
+mod util;
+mod render;
 
 use memory::{Memory,Heap};
+use object::Object;
+use util::Generic;
 use std::fmt::Display;
 
 #[derive(Copy, Clone, Debug)]
@@ -141,8 +147,17 @@ impl System {
     }
 }
 
+fn func<'a>(x: Option<&'a Object>) -> Generic {
+    println!("cool thing - {:?}", x);
+    Ok(None)
+}
+
 fn main() {
     memory::init().expect("failed to initialize memory subsystem");
     let sys = System::new();
     sys.console.log("Hello, world!");
+
+    let mut obj = object::Object::new();
+    obj.set_fn(0, func).unwrap();
+    obj.call(None).expect("failure :(");
 }
