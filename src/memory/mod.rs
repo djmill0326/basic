@@ -1,5 +1,10 @@
 ﻿
-use crate::object::Object;
+pub mod list;
+pub mod object;
+pub mod string;
+pub mod table;
+
+use object::Object;
 
 const PAGE_SIZE: usize = 2048;
 const STACK_SIZE: usize = PAGE_SIZE * 8;

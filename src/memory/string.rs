@@ -1,4 +1,5 @@
-use crate::{object::Object, memory::Dynamic, util::Generic, list::{list_proto, self}};
+use crate::memory::{object::Object, Dynamic, list::{list_proto, self}};
+use crate::util::Generic;
 
 static mut STR_PTOTO: Option<Object> = None;
 
