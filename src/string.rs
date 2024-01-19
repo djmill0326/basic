@@ -1,4 +1,4 @@
-use crate::{object::Object, memory::Dynamic, util::Generic, list::list_proto};
+use crate::{object::Object, memory::Dynamic, util::Generic, list::{list_proto, self}};
 
 static mut STR_PTOTO: Option<Object> = None;
 
@@ -17,6 +17,7 @@ fn proto_call(x: Option<&Object>) -> Generic {
 }
 
 pub(crate) fn init() {
+    list::init();
     unsafe {
         let mut obj = Object(Dynamic::new());
         obj.set_fn(1, proto_call).unwrap();
