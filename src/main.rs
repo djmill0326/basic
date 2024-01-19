@@ -1,5 +1,4 @@
 mod memory;
-#[macro_use]
 mod object;
 mod util;
 mod render;
