@@ -1,10 +1,5 @@
 ﻿
-pub mod list;
-pub mod object;
-pub mod string;
-pub mod table;
-
-use object::Object;
+use crate::object::Object;
 
 const PAGE_SIZE: usize = 2048;
 const STACK_SIZE: usize = PAGE_SIZE * 8;
@@ -18,7 +13,7 @@ pub struct Stack(pub [usize; STACK_SIZE]);
 #[derive(Clone, Debug)]
 pub struct Heap(pub Vec<Page>);
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Dynamic(pub [usize;4], pub Vec<usize>);
 
 #[derive(Clone, Debug)]
@@ -42,20 +37,10 @@ impl Dynamic {
     pub fn new() -> Self { Dynamic([0;4], Vec::new()) }
 }
 
-static mut ROOT_PAGE: Option<Page> = None;
-static mut ROOT_STACK: Option<Stack> = None;
-static mut ROOT_HEAP: Option<Heap> = None;
-static mut ROOT_OBJECT: Option<Object> = None;
-
-pub fn init() -> Result<(), &'static str> {
-    unsafe {
-        ROOT_PAGE = Some(Page::new());
-        ROOT_STACK = Some(Stack::new());
-        ROOT_HEAP = Some(Heap::new());
-        ROOT_OBJECT = Some(Object::new());
-    }
-    Ok(())
-}
+pub(crate) static mut ROOT_PAGE: Option<Page> = None;
+pub(crate) static mut ROOT_STACK: Option<Stack> = None;
+pub(crate) static mut ROOT_HEAP: Option<Heap> = None;
+pub(crate) static mut ROOT_OBJECT: Option<&mut Object> = None;
 
 pub fn root_page() -> &'static mut Page {
     unsafe { ROOT_PAGE.as_mut().unwrap_unchecked() }

@@ -1,4 +1,4 @@
-use crate::memory::object::Object;
+use crate::object::Object;
 use std::collections::HashMap;
 
 type TableTable<'a> = HashMap<&'a str, &'a mut Object>;

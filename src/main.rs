@@ -1,9 +1,13 @@
-mod typeshit;
-mod memory;
-mod util;
-mod render;
+mod init;
+pub mod memory;
+pub mod util;
+pub mod object;
+pub mod terminal;
+pub mod file_io;
+pub mod r#type;
 
-use memory::{Memory,Heap, object::{self, Object}};
+use memory::{Memory,Heap};
+use object::{Object};
 use util::Generic;
 use std::fmt::Display;
 
@@ -146,8 +150,7 @@ impl System {
 }
 
 fn main() {
-    object::init();
-    memory::init().expect("failed to initialize memory subsystem");
+    init::init();
 
     let sys = System::new();
     sys.console.log("Hello, world!");
@@ -155,7 +158,7 @@ fn main() {
     let mut obj = object::Object::new();
     let mut obj2 = Box::new(Object::new());
 
-    let mut table = memory::table::Table::new();
+    let mut table = r#type::table::Table::new();
     table.set("hello", &mut obj);
     table.set("world", obj2.as_mut());
     
